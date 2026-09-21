@@ -21,6 +21,7 @@ import {
   createImageEditTask,
   createImageGenerationTask,
   fetchAccounts,
+  fetchImageModels,
   fetchModels,
   fetchImageTasks,
   resumeImagePoll,
@@ -690,8 +691,8 @@ function ImagePageContent({ isAdmin }: { isAdmin: boolean }) {
 
     const loadImageModels = async () => {
       try {
-        const data = await fetchModels();
-        const available = filterImageModels(Array.isArray(data.data) ? data.data : []);
+        const catalog = await fetchImageModels();
+        const available = catalog.models.filter(Boolean);
         if (cancelled || available.length === 0) {
           return;
         }
@@ -704,8 +705,16 @@ function ImagePageContent({ isAdmin }: { isAdmin: boolean }) {
           return normalizeStoredImageModel(storedModel, available);
         });
       } catch {
-        if (!cancelled) {
-          setImageModels(["gpt-image-2"]);
+        try {
+          const data = await fetchModels();
+          const available = filterImageModels(Array.isArray(data.data) ? data.data : []);
+          if (!cancelled && available.length > 0) {
+            setImageModels(available);
+          }
+        } catch {
+          if (!cancelled) {
+            setImageModels(["gpt-image-2"]);
+          }
         }
       }
     };

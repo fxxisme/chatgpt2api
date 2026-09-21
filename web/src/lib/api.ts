@@ -339,6 +339,17 @@ export async function fetchModels() {
   return httpRequest<ModelListResponse>("/v1/models");
 }
 
+export type ImageModelCatalog = {
+  models: ImageModel[];
+  default_image_model: ImageModel;
+  source: string;
+  updated_at: string;
+};
+
+export async function fetchImageModels() {
+  return httpRequest<ImageModelCatalog>("/api/image-models");
+}
+
 export async function createAccounts(tokens: string[], accounts: AccountImportPayload[] = []) {
   return httpRequest<AccountMutationResponse>("/api/accounts", {
     method: "POST",
