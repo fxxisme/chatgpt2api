@@ -82,6 +82,16 @@ DEFAULT_THIRD_PARTY_APPS = {
     },
 }
 
+DEFAULT_IMAGE_MODELS = [
+    "gpt-image-2.5-sunburst",
+    "gpt-image-2.5-flare",
+    "gpt-image-2",
+    "gpt-5-5-thinking",
+    "gpt-5-5",
+    "gpt-5-3",
+]
+DEFAULT_IMAGE_MODEL = "gpt-image-2"
+
 
 def _normalize_bool(value: object, default: bool = False) -> bool:
     if isinstance(value, str):
@@ -510,6 +520,43 @@ class ConfigStore:
         return str(self.data.get("global_system_prompt") or "").strip()
 
     @property
+    def custom_image_models(self) -> list[str]:
+        value = self.data.get("custom_image_models")
+        if not isinstance(value, list):
+            return []
+        return [m for item in value if (m := str(item or "").strip().lower())]
+
+    @property
+    def image_models_cache(self) -> list[str]:
+        value = self.data.get("image_models_cache")
+        if not isinstance(value, list):
+            return []
+        return [m for item in value if (m := str(item or "").strip().lower())]
+
+    @property
+    def image_models(self) -> list[str]:
+        seen: set[str] = set()
+        models: list[str] = []
+        for m in [*DEFAULT_IMAGE_MODELS, *self.image_models_cache, *self.custom_image_models]:
+            if m and m not in seen:
+                seen.add(m)
+                models.append(m)
+        return models
+
+    @property
+    def default_image_model(self) -> str:
+        value = str(self.data.get("default_image_model") or "").strip().lower()
+        return value if value else DEFAULT_IMAGE_MODEL
+
+    @property
+    def image_models_source(self) -> str:
+        return str(self.data.get("image_models_source") or "default").strip()
+
+    @property
+    def image_models_updated_at(self) -> str:
+        return str(self.data.get("image_models_updated_at") or "").strip()
+
+    @property
     def default_upstream_model_name(self) -> str:
         return str(self.data.get("default_upstream_model_name") or "gpt-5-5").strip()
 
@@ -578,6 +625,11 @@ class ConfigStore:
         data["sensitive_words"] = self.sensitive_words
         data["ai_review"] = self.ai_review
         data["global_system_prompt"] = self.global_system_prompt
+        data["image_models"] = self.image_models
+        data["default_image_model"] = self.default_image_model
+        data["image_models_source"] = self.image_models_source
+        data["image_models_updated_at"] = self.image_models_updated_at
+        data["custom_image_models"] = self.custom_image_models
         data["default_upstream_model_name"] = self.default_upstream_model_name
         data["default_thinking_effort"] = self.default_thinking_effort
         data["backup"] = self.get_backup_settings()

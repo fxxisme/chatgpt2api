@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from api.support import require_admin, require_identity, resolve_image_base_url
 from services.backup_service import BackupError, backup_service
 from services.config import config
+from services.image_model_service import get_image_model_catalog, refresh_image_model_catalog
 from services.image_service import (
     compress_images,
     delete_images,
@@ -361,5 +362,15 @@ td{{padding:8px 12px;border-top:1px solid #2a2d3a;font-size:14px}}tr:hover td{{b
 </table>
 <div class="refresh">JSON: <span class="api-url">/health?format=json</span></div>
 </div></body></html>""")
+
+    @router.get("/api/image-models")
+    async def get_image_models(authorization: str | None = Header(default=None)):
+        require_admin(authorization)
+        return get_image_model_catalog()
+
+    @router.post("/api/image-models/refresh")
+    async def refresh_image_models(authorization: str | None = Header(default=None)):
+        require_admin(authorization)
+        return await run_in_threadpool(refresh_image_model_catalog)
 
     return router
